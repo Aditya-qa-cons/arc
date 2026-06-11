@@ -1,0 +1,69 @@
+{
+  "_comment": "Copy this to .claude/workflow-config.json and fill in your values. Or run /arc-init to generate it automatically.",
+  "schema_version": "1.0",
+  "repo": "your-org/your-repo",
+  "base_branch": "develop",
+  "dev_url": "https://dev.example.com",
+  "deployment": {
+    "provider": "firebase-app-hosting",
+    "_provider_note": "Valid values: firebase-app-hosting, vercel, http-health",
+    "app_hosting_backend": "your-backend-name",
+    "typical_duration_minutes": 10,
+    "poll_interval_minutes": 2,
+    "timeout_minutes": 20,
+    "vercel_project": "",
+    "health_url": "",
+    "version_field": "sha"
+  },
+  "qa": {
+    "auth_method": "firebase",
+    "_auth_method_note": "firebase=IDB injection (Firebase projects), cookie=form-based login, none=no auth",
+    "login_path": "/login"
+  },
+  "gcloud": {
+    "_note": "Only required for Firebase App Hosting projects. Remove this block for Vercel/Railway/Render.",
+    "config_name": "myapp",
+    "project_dev": "myapp-dev",
+    "project_prod": "myapp-prod"
+  },
+  "labels": {
+    "merged_check": "Merged - Check",
+    "merged_redo": "Merged - Redo",
+    "qa_passed": "QA Passed",
+    "p0_critical": "p0-critical",
+    "priority_high": "priority-high"
+  },
+  "branch_naming": {
+    "bug_fix": "fix/issue-{number}-{description}",
+    "batch": "fix/batch-{n}-{description}",
+    "feature": "feat/{description}"
+  },
+  "pr_title_format": "{type}({area}): {description} (#{issue})",
+  "po_run": {
+    "auto_advance": false,
+    "max_batch_size": 5
+  },
+  "team": {
+    "project_name": "MyApp",
+    "reviewers": ["Alice", "Bob"],
+    "qa_person": "Carol",
+    "work_summary_format": "slack"
+  },
+  "qa_users": [
+    {
+      "role": "admin",
+      "email": "test.admin@example.com",
+      "env_var": "TEST_ADMIN_PASSWORD",
+      "entry_path": "/dashboard"
+    }
+  ],
+  "workflow": {
+    "steps": [
+      { "id": "fix",              "skill": "arc-fix-issue",        "enabled": true, "options": { "pr_gate": true } },
+      { "id": "fix_pr_issues",    "skill": "fix-pr-issues",        "enabled": true },
+      { "id": "finish",           "skill": "arc-finish-issue",     "enabled": true },
+      { "id": "verify",           "skill": "arc-verify-issue",     "enabled": true, "requires": ["finish"] },
+      { "id": "update_test_plan", "skill": "arc-update-test-plan", "enabled": true }
+    ]
+  }
+}
