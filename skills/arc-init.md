@@ -47,8 +47,8 @@ Run these four detection commands silently (do not print intermediate output):
 git remote get-url origin
 ```
 Extract the `owner/repo` slug from the remote URL, handling both formats:
-- HTTPS: `https://github.com/owner/repo.git` → strip `https://github.com/` prefix and `.git` suffix
-- SSH: `git@github.com:owner/repo.git` → strip `git@github.com:` prefix and `.git` suffix
+- HTTPS: `https://github.com/owner/repo.git` → strip `https://github.com/` prefix and optional `.git` suffix
+- SSH: `git@github.com:owner/repo.git` → strip `git@github.com:` prefix and optional `.git` suffix
 
 If this fails (no remote), ask the user: "No git remote found. What is your GitHub repo? (e.g. `myorg/myrepo`)" Use their answer as `repo`.
 
