@@ -75,10 +75,16 @@ OPERATOR=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$MAIN_ROO
 tail -20 "$MAIN_ROOT/.claude/run-log-${OPERATOR}.jsonl" 2>/dev/null
 ```
 
-Filter entries to `po-verify-issue` and `po-run` skill logs with `ts` after the cutoff date from Step 2. Collect:
+Filter entries to `arc-verify-issue`, `arc-run`, and `arc-qa-session` skill logs with `ts` after the cutoff date from Step 2. Collect:
 - Issues that `outcome: "passed"` — confirmed working on dev
 - Issues that `outcome: "failed"` — QA rejected, have `Merged - Redo` label
 - Issues `outcome: "aborted"` — could not complete QA (e.g. deployment timeout)
+
+For `arc-qa-session` entries, separately collect:
+- `section` and `section_title` — which section was tested
+- `pass`, `fail`, `blocked`, `gap` — TC result counts
+- `issues_filed` — issue numbers raised during the session
+- `ts` and operator name (use the `$OPERATOR` variable resolved above) — for attribution
 
 ## Step 4a — Identify action items
 
@@ -121,6 +127,23 @@ Template (substitute `[project_name]` = team.project_name, `[reviewer]` = team.r
 ❌ #NNN [title] — failed (re-fix needed)
 ⏸ #NNN [title] — not yet verified (deployment pending)
 [omit this section entirely if no QA was run this period]
+
+*Manual QA sessions:*
+
+📋 Section [N] — [pass] PASS · [fail] FAIL · [blocked] BLOCKED · [gap] GAP
+   [If fail > 0:] FAILs: issue #[NNN], #[NNN]
+   Tested by: [OPERATOR] · [date] · PR #[NNN]
+
+[Repeat for each arc-qa-session entry in the period]
+[Omit "Manual QA sessions" subsection entirely if no arc-qa-session entries exist in the period]
+
+**Manual QA sessions rendering rules:**
+- One block per session entry (one per section tested)
+- If `fail == 0 && blocked == 0 && gap == 0`: single ✅ line with PASS count only — omit sub-bullets
+- If `fail > 0`: always show the FAILs sub-bullet with issue numbers from `issues_filed`
+- If `blocked + gap >= 3`: show a BLOCKED/GAP sub-bullet
+- If `pr` is null, omit the PR number suffix from the Tested by line
+- Omit the "Manual QA sessions" subsection entirely if no `arc-qa-session` entries exist in the period
 
 ---
 

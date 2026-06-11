@@ -167,6 +167,42 @@ git log origin/develop --oneline --since="7 days ago"
 
 Note which issues/PRs landed recently that might affect open work.
 
+## Step 4.5 — Read QA standing from run log
+
+Read all operator log files and extract the most recent `arc-qa-session` entry per section:
+
+```bash
+MAIN_ROOT=$(git worktree list --porcelain | head -1 | cut -d' ' -f2-)
+cat "$MAIN_ROOT"/.claude/run-log-*.jsonl 2>/dev/null | grep '"skill":"arc-qa-session"'
+```
+
+From the results: parse each line as JSON. Skip any line that is not valid JSON or is missing `section` or `ts` fields. Group by `section`, keep the entry with the highest `ts` per section. Keep this data in context for Step 5.
+
+Also read the test plan to know how many sections exist (to determine "not yet started" sections). Extract `qa.test_plan_path` from `workflow-config.json` (defaulting to `docs/QA_E2E_TEST_PLAN_QC_WORKFLOW.md` if absent), and read section headers from the test plan:
+
+```bash
+grep "^## [0-9]" "$MAIN_ROOT/[qa.test_plan_path]" 2>/dev/null | head -20
+```
+
+Keep the highest section number seen in context. If the file is unreadable, skip this command — the "not yet started" line will be omitted from the brief.
+
+If no `arc-qa-session` entries exist in any log file, skip Step 4.5 entirely — the QA standing block will be omitted from the brief.
+
+QA standing:
+  Section [N] — [N] FAILs → #[NNN] · [N] BLOCKEDs [[blocker_patterns comma-joined]]
+  Section [N] — ✅ fully clean ([N]/[tcs_total] PASS)
+  Section [N+]+ — not yet started
+  [omit this entire section if no arc-qa-session entries exist in any log file]
+
+**QA standing rendering rules:**
+- One line per section tested (most recent log entry per section) — cap at 5 sections; if more tested sections exist, append `…and N more sections` on a final line
+- If `fail > 0`: show `N FAILs → #NNN, #NNN` — comma-join all issue numbers from `issues_filed` (e.g. `3 FAILs → #759, #760, #762`); omit the arrow entirely if `issues_filed` is empty
+- If `blocked > 0`: show `N BLOCKEDs [blocker_patterns comma-joined]` — patterns give the unblock path at a glance
+- If `gap > 0`: append `· N GAPs` (no detail — GAPs are product backlog items)
+- If `fail == 0 && blocked == 0 && gap == 0`: show `✅ fully clean (N/tcs_total PASS)`
+- "Section N+ — not yet started": only if the test plan has confirmed sections beyond the highest tested section number; omit if the test plan path is not set or unreadable
+- Omit the entire QA standing block if no `arc-qa-session` entries exist in any log file
+
 ## Step 5 — Print the brief
 
 Use this format (plain text, no markdown headers):

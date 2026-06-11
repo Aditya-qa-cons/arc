@@ -46,7 +46,10 @@ Run these four detection commands silently (do not print intermediate output):
 # 1. Repo
 git remote get-url origin
 ```
-Strip `https://github.com/` prefix and `.git` suffix to get `owner/repo` form.
+Extract the `owner/repo` slug from the remote URL, handling both formats:
+- HTTPS: `https://github.com/owner/repo.git` → strip `https://github.com/` prefix and `.git` suffix
+- SSH: `git@github.com:owner/repo.git` → strip `git@github.com:` prefix and `.git` suffix
+
 If this fails (no remote), ask the user: "No git remote found. What is your GitHub repo? (e.g. `myorg/myrepo`)" Use their answer as `repo`.
 
 ```bash
@@ -64,7 +67,7 @@ If `package.json` is missing or `name` is empty, fall back to the part after `/`
 
 ```bash
 # 4. Deployment provider (check in priority order — first match wins)
-ls apphosting.yaml firebase.json vercel.json .vercel/ railway.toml render.yaml 2>/dev/null
+for f in apphosting.yaml firebase.json vercel.json .vercel/ railway.toml render.yaml; do [ -e "$f" ] && echo "$f" && break; done
 ```
 Detection logic:
 - `apphosting.yaml` or `firebase.json` present → `firebase-app-hosting`
